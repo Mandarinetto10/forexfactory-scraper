@@ -1,37 +1,19 @@
 # src/forexfactory/incremental.py
 
-"""Utilities orchestrating incremental scraping runs."""
-
-from datetime import datetime
-from typing import Iterable, Optional
-
 from loguru import logger
+import os
+import pandas as pd
+from datetime import datetime, timedelta
+from dateutil.tz import gettz
 
+from .csv_util import ensure_csv_header, read_existing_data, write_data_to_csv, merge_new_data
 from .scraper import scrape_range_pandas
 
-
-def scrape_incremental(
-    from_date: datetime,
-    to_date: datetime,
-    output_csv: str,
-    tzname: str = "Asia/Tehran",
-    scrape_details: bool = False,
-    currencies: Optional[Iterable[str]] = None,
-) -> None:
-    """Scrape the requested range, delegating to the pandas-based scraper."""
-    logger.info(
-        "Starting incremental scrape from {} to {} (details: {}, tz: {})",
-        from_date.date(),
-        to_date.date(),
-        scrape_details,
-        tzname,
-    )
-
-    scrape_range_pandas(
-        from_date,
-        to_date,
-        output_csv,
-        tzname=tzname,
-        scrape_details=scrape_details,
-        currencies=currencies,
-    )
+def scrape_incremental(from_date, to_date, output_csv, tzname="Asia/Tehran", scrape_details=False, currencies=None):
+    """
+    Example: day-by-day approach but we only re-scrape if day is missing or incomplete.
+    For simplicity, let's re-scrape entire range. Then we can add logic if needed.
+    """
+    # You can implement a logic that checks existing_df if days are complete or not.
+    # For now, let's just call scrape_range_pandas:
+    scrape_range_pandas(from_date, to_date, output_csv, tzname=tzname, scrape_details=scrape_details, currencies=currencies)
