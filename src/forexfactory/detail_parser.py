@@ -1,68 +1,61 @@
 # src/forexfactory/detail_parser.py
 
-import re
-import logging
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+"""Utilities for scraping event detail rows from Forex Factory."""
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+import re
+
+from loguru import logger
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
 MAX_RETRIES = 3
 
-def parse_detail_table(driver):
-    """
-    Parses the detail table when detail row is expanded.
-    Returns a dictionary of specs.
-    """
+
+def parse_detail_table(driver) -> dict:
+    """Parse the detail table when the detail row is expanded."""
     detail_data = {}
     for attempt in range(MAX_RETRIES):
         try:
             WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.XPATH,
-                  '//tr[contains(@class,"calendar__details--detail")]//table[@class="calendarspecs"]'
+                EC.visibility_of_element_located((
+                    By.XPATH,
+                    '//tr[contains(@class,"calendar__details--detail")]//table[@class="calendarspecs"]'
                 ))
             )
-            all_tables = driver.find_elements(By.XPATH,
-              '//tr[contains(@class,"calendar__details--detail")]//table[@class="calendarspecs"]'
+            all_tables = driver.find_elements(
+                By.XPATH,
+                '//tr[contains(@class,"calendar__details--detail")]//table[@class="calendarspecs"]'
             )
             if not all_tables:
                 logger.warning("No detail_table found.")
                 break
-            detail_table = all_tables[-1]  # or the first if needed
+            detail_table = all_tables[-1]
 
             rows = detail_table.find_elements(By.XPATH, './tr')
-            for r in rows:
+            for row in rows:
                 try:
-                    spec_name = r.find_element(By.XPATH, './td[1]').text.strip()
-                    spec_desc = r.find_element(By.XPATH, './td[2]').text.strip()
+                    spec_name = row.find_element(By.XPATH, './td[1]').text.strip()
+                    spec_desc = row.find_element(By.XPATH, './td[2]').text.strip()
                     detail_data[spec_name] = spec_desc
-                except NoSuchElementException as e:
-                    pass
+                except NoSuchElementException:
+                    logger.debug("Skipping malformed detail row during parsing.")
             break
-        except TimeoutException as e:
-            logger.error("Timeout in parse_detail_table: %s", e, exc_info=True)
+        except TimeoutException as exc:
+            logger.opt(exception=exc).error("Timeout in parse_detail_table on attempt {}", attempt + 1)
             if attempt < MAX_RETRIES - 1:
                 logger.info("Retrying parse_detail_table...")
             else:
-                logger.error("Max retries reached.")
+                logger.error("Max retries reached while parsing detail table.")
     return detail_data
 
+
 def detail_data_to_string(detail_data: dict) -> str:
-    """
-    Convert dictionary from parse_detail_table() into a single string for CSV storage.
-    Replace newlines or excessive whitespaces with space.
-    """
+    """Convert dictionary from :func:`parse_detail_table` into a flat string for CSV storage."""
     parts = []
-    for k, v in detail_data.items():
-        # Replacing all whitespace (including \n, \r, tabs) with a single space
-        k_clean = re.sub(r'\s+', ' ', k).strip()
-        v_clean = re.sub(r'\s+', ' ', v).strip()
-        parts.append(f"{k_clean}: {v_clean}")
+    for key, value in detail_data.items():
+        key_clean = re.sub(r'\s+', ' ', key).strip()
+        value_clean = re.sub(r'\s+', ' ', value).strip()
+        parts.append(f"{key_clean}: {value_clean}")
     return " | ".join(parts)
