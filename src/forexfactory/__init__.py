@@ -1,3 +1,1 @@
-"""
-This package handles scraping ForexFactory data with Selenium and parsing the detail sections.
-"""
+"""Utilities for scraping ForexFactory economic calendar data."""

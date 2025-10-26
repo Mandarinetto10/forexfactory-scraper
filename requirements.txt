@@ -4,3 +4,5 @@ python-dateutil
 tzdata
 pandas
 numpy
+loguru>=0.7.2
+tqdm>=4.66.0
