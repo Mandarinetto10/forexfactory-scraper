@@ -212,6 +212,19 @@ def scrape_range_pandas(from_date: datetime, to_date: datetime, output_csv: str,
             except Exception as e:
                 logger.error(f"Error closing WebDriver: {e}")
             finally:
+                # Prevent undetected_chromedriver.Chrome.__del__ from calling quit() again
+                # by overriding instance methods with no-ops before deleting the object.
+                try:
+                    driver.quit = lambda *a, **k: None
+                    driver.close = lambda *a, **k: None
+                except Exception:
+                    pass
+                try:
+                    del driver
+                except Exception:
+                    pass
+                import gc
+                gc.collect()
                 driver = None
 
     # Final save (if needed)
