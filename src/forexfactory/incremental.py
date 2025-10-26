@@ -9,7 +9,7 @@ from dateutil.tz import gettz
 from .csv_util import ensure_csv_header, read_existing_data, write_data_to_csv, merge_new_data
 from .scraper import scrape_range_pandas
 
-def scrape_incremental(from_date, to_date, output_csv, tzname="Asia/Tehran", scrape_details=False, currencies=None):
+def scrape_incremental(from_date, to_date, output_csv, tzname="Europe/London", scrape_details=False, currencies=None):
     """
     Example: day-by-day approach but we only re-scrape if day is missing or incomplete.
     For simplicity, let's re-scrape entire range. Then we can add logic if needed.

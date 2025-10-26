@@ -181,7 +181,7 @@ def scrape_day(driver, the_date: datetime, existing_df: pd.DataFrame, scrape_det
     return df_day_new
 
 
-def scrape_range_pandas(from_date: datetime, to_date: datetime, output_csv: str, tzname="Asia/Tehran",
+def scrape_range_pandas(from_date: datetime, to_date: datetime, output_csv: str, tzname="Europe/London",
                         scrape_details=False, currencies=None):
     from .csv_util import ensure_csv_header, read_existing_data, merge_new_data, write_data_to_csv
 
@@ -229,6 +229,19 @@ def scrape_range_pandas(from_date: datetime, to_date: datetime, output_csv: str,
             except Exception as e:
                 logger.error(f"Error closing WebDriver: {e}")
             finally:
+                # Prevent undetected_chromedriver.Chrome.__del__ from calling quit() again
+                # by overriding instance methods with no-ops before deleting the object.
+                try:
+                    driver.quit = lambda *a, **k: None
+                    driver.close = lambda *a, **k: None
+                except Exception:
+                    pass
+                try:
+                    del driver
+                except Exception:
+                    pass
+                import gc
+                gc.collect()
                 driver = None
 
     # Final save (if needed)

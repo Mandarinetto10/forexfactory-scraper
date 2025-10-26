@@ -35,10 +35,16 @@ def main():
     parser = argparse.ArgumentParser(description="Forex Factory Scraper (Incremental + pandas)")
     parser.add_argument('--start', type=str, required=True, help='Start date (YYYY-MM-DD)')
     parser.add_argument('--end', type=str, required=True, help='End date (YYYY-MM-DD)')
-    parser.add_argument('--csv', type=str, default="forex_factory_cache.csv", help='Output CSV file')
-    parser.add_argument('--tz', type=str, default="Asia/Tehran", help='Timezone')
+    parser.add_argument('--csv', type=str, default="forex_news.csv", help='Output CSV file')
+    parser.add_argument('--tz', type=str, default="Europe/London", help='Timezone')
     parser.add_argument('--details', action='store_true', help='Scrape details or not')
-    parser.add_argument('--currencies', type=str, default=None, help='Comma-separated list of currencies to filter (e.g., USD,EUR,JPY)')
+    parser.add_argument(
+        '--currencies',
+        nargs='+',
+        type=str,
+        default=None,
+        help='Space- or comma-separated list of currencies to filter (e.g., USD EUR JPY or "USD,EUR,JPY")'
+    )
     parser.add_argument('--log-file', type=str, default=None, help='Log file path (optional)')
 
     args = parser.parse_args()
@@ -53,7 +59,13 @@ def main():
     # Parse currencies
     currencies = None
     if args.currencies:
-        currencies = set(c.strip().upper() for c in args.currencies.split(','))
+        tokens = []
+        if isinstance(args.currencies, list):
+            for item in args.currencies:
+                tokens.extend([t for t in str(item).split(',') if t.strip()])
+        else:
+            tokens = [t for t in str(args.currencies).split(',') if t.strip()]
+        currencies = set(c.strip().upper() for c in tokens)
 
     scrape_incremental(from_date, to_date, args.csv, tzname=args.tz, scrape_details=args.details, currencies=currencies)
 

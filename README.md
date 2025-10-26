@@ -83,8 +83,8 @@ The main script can be executed via the command line, allowing you to specify va
 
 - `--start`: **(Required)** Start date for scraping in `YYYY-MM-DD` format.
 - `--end`: **(Required)** End date for scraping in `YYYY-MM-DD` format.
-- `--csv`: **(Optional)** Output CSV file path. Default is `forex_factory_cache.csv`.
-- `--tz`: **(Optional)** Timezone for event dates. Default is `Asia/Tehran`.
+- `--csv`: **(Optional)** Output CSV file path. Default is `forex_news.csv`.
+- `--tz`: **(Optional)** Timezone for event dates. Default is `Europe/London`.
 - `--details`: **(Optional)** Flag to enable scraping of detailed event information. If omitted, only basic event data is scraped.
 
 ### Running the Scraper
@@ -100,19 +100,19 @@ python -m src.forexfactory.main --start YYYY-MM-DD --end YYYY-MM-DD [--csv OUTPU
 1. **Scrape Events from March 21, 2024, to March 25, 2024, Including Details**
 
    ```bash
-   python -m src.forexfactory.main --start 2024-03-21 --end 2024-03-25 --csv forex_factory_cache.csv --tz Asia/Tehran --details
+   python -m src.forexfactory.main --start 2024-03-21 --end 2024-03-25 --csv forex_news.csv --tz Europe/London --details
    ```
 
 2. **Scrape Events from January 1, 2024, to January 31, 2024, Without Details**
 
    ```bash
-   python -m src.forexfactory.main --start 2024-01-01 --end 2024-01-31 --csv january_events.csv --tz Asia/Tehran
+   python -m src.forexfactory.main --start 2024-01-01 --end 2024-01-31 --csv january_events.csv --tz Europe/London
    ```
 
 3. **Scrape Events from February 15, 2024, to February 20, 2024, Saving to a Custom CSV File**
 
    ```bash
-   python -m src.forexfactory.main --start 2024-02-15 --end 2024-02-20 --csv feb_events.csv --tz Asia/Tehran
+   python -m src.forexfactory.main --start 2024-02-15 --end 2024-02-20 --csv feb_events.csv --tz Europe/London
    ```
 
 ## Dependencies
@@ -129,21 +129,25 @@ Install dependencies using:
 ```bash
 pip install -r requirements.txt
 ```
+or
+```bash
+python -m pip install --upgrade --no-cache-dir -r requirements.txt
+```
 
 ## Examples
 
 ### Scraping with Details
 
 ```bash
-python -m src.forexfactory.main --start 2024-03-21 --end 2024-03-25 --csv forex_factory_cache.csv --tz Asia/Tehran --details
+python -m src.forexfactory.main --start 2024-03-21 --end 2024-03-25 --csv forex_news.csv --tz Europe/London --details
 ```
 
-This command scrapes Forex Factory events from March 21, 2024, to March 25, 2024, including detailed specifications for each event, and saves the data to `forex_factory_cache.csv` with Tehran timezone.
+This command scrapes Forex Factory events from March 21, 2024, to March 25, 2024, including detailed specifications for each event, and saves the data to `forex_news.csv` with Tehran timezone.
 
 ### Scraping without Details
 
 ```bash
-python -m src.forexfactory.main --start 2024-03-21 --end 2024-03-25 --csv forex_factory_cache.csv --tz Asia/Tehran
+python -m src.forexfactory.main --start 2024-03-21 --end 2024-03-25 --csv forex_news.csv --tz Europe/London
 ```
 
 This command performs the same scraping without fetching detailed event specifications, resulting in a faster scraping process.
@@ -171,7 +175,48 @@ This command performs the same scraping without fetching detailed event specific
    - Use proxies if necessary.
    - Be mindful of the scraping rate to avoid IP bans.
 
-3. **Incorrect Date Parsing**
+3. **Binary incompatibility between numpy and pandas (`ValueError: numpy.dtype size changed`)**
+
+   **Cause:** pandas was installed/compiled against a different numpy ABI than the currently installed numpy wheel. The fix is to reinstall compatible numpy and pandas wheels.
+
+   **Recommended steps (in order):**
+
+   1. Activate your virtual environment (PowerShell)
+      ```powershell
+      .\venv\Scripts\Activate.ps1
+      ```
+
+   2. Confirm which Python and pip are active
+      ```bash
+      python -V
+      python -m pip --version
+      ```
+
+   3. Upgrade pip to improve chances of getting matching binary wheels
+      ```bash
+      python -m pip install --upgrade pip
+      ```
+
+   4. Reinstall numpy and pandas forcing fresh binary wheels (no cache)
+      ```bash
+      python -m pip install --upgrade --force-reinstall --no-cache-dir numpy pandas
+      ```
+
+   5. Alternatively, reinstall using your requirements file (if it pins compatible versions)
+      ```bash
+      python -m pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+      ```
+
+   6. If problems persist, perform a full uninstall, clear pip cache, then reinstall
+      ```bash
+      python -m pip uninstall -y numpy pandas
+      python -m pip cache purge
+      python -m pip install --no-cache-dir numpy pandas
+      ```
+
+   These steps typically resolve the "numpy.dtype size changed" error by ensuring numpy and pandas are installed with compatible binary wheels.
+
+4. **Incorrect Date Parsing**
 
    **Cause:** Mismatch between the date format in the CSV and the expected format in the script.
 
@@ -179,7 +224,7 @@ This command performs the same scraping without fetching detailed event specific
    - Ensure that dates in the CSV are in ISO format (`YYYY-MM-DDTHH:MM:SS`).
    - Modify the `get_last_datetime_from_csv` function if your date format differs.
 
-4. **Missing or Incorrect XPath Selectors**
+5. **Missing or Incorrect XPath Selectors**
 
    **Cause:** Changes in the Forex Factory website structure leading to incorrect XPath selectors.
 
@@ -187,7 +232,7 @@ This command performs the same scraping without fetching detailed event specific
    - Verify the current structure of the Forex Factory website.
    - Update XPath selectors in the scraper accordingly.
 
-5. **Browser Driver Issues**
+6. **Browser Driver Issues**
 
    **Cause:** Incompatible or outdated ChromeDriver versions.
 
@@ -242,4 +287,3 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 **Disclaimer:** This scraper is intended for personal use and educational purposes only. Ensure compliance with Forex Factory's [Terms of Service](https://www.forexfactory.com/disclaimer) and avoid violating any usage policies. Use responsibly.
-```
